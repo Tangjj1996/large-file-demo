@@ -1,7 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
+  ParseIntPipe,
   Post,
+  Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -76,5 +80,32 @@ export class AppController {
       });
       startPos += fs.statSync(filePath).size;
     });
+  }
+
+  @Get('file-size')
+  fileDownload(@Query('id') id: string) {
+    const filePath = `file_${id}`;
+    if (fs.existsSync(filePath)) {
+      const stat = fs.statSync(filePath);
+      return {
+        size: stat.size,
+        fileName: 'test.png',
+      };
+    }
+  }
+
+  @Get('file-chunk')
+  fileGet(
+    @Query('start', ParseIntPipe) start: number,
+    @Query('end', ParseIntPipe) end: number,
+    @Res() res,
+  ) {
+    const filePath = 'file/test.png';
+    const fileStream = fs.createReadStream(filePath, {
+      start,
+      end,
+    });
+
+    fileStream.pipe(res);
   }
 }
